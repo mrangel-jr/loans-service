@@ -19,10 +19,17 @@ func SetupRoutes(mux *http.ServeMux) {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+
 		var customerLoan models.CustomerLoan
 		err := json.NewDecoder(r.Body).Decode(&customerLoan)
 		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
+			writeJSON(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		if err := customerLoan.Validate(); err != nil {
+			message := map[string]string{"error": err.Error()}
+			writeJSON(w, message, http.StatusBadRequest)
 			return
 		}
 
@@ -33,8 +40,12 @@ func SetupRoutes(mux *http.ServeMux) {
 		response.Loans = availableLoans
 		response.Customer = customerLoan.Name
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		writeJSON(w, response, http.StatusOK)
 	})
+}
+
+func writeJSON(w http.ResponseWriter, response interface{}, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(response)
 }

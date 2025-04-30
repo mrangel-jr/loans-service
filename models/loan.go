@@ -1,5 +1,10 @@
 package models
 
+import (
+	"errors"
+	"strings"
+)
+
 type Loan struct {
 	Type           string `json:"type"`
 	InterestedRate int    `json:"interested_rate"`
@@ -60,4 +65,23 @@ func GetAvailableLoans(customerLoan CustomerLoan) []Loan {
 	loans = append(loans, getGuaranteedLoan(customerLoan)...)
 	loans = append(loans, getConsigmentLoan(customerLoan)...)
 	return loans
+}
+
+func (c CustomerLoan) Validate() error {
+	if c.Age <= 0 {
+		return errors.New("age is required and must be greater than 0")
+	}
+	if strings.TrimSpace(c.Cpf) == "" {
+		return errors.New("cpf is required")
+	}
+	if strings.TrimSpace(c.Name) == "" {
+		return errors.New("name is required")
+	}
+	if c.Income <= 0 {
+		return errors.New("income is required and must be greater than 0")
+	}
+	if strings.TrimSpace(c.Location) == "" {
+		return errors.New("location is required")
+	}
+	return nil
 }
